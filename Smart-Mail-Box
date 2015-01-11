@@ -1,38 +1,76 @@
 /**
- *  Notify Me When Mail is Delivered
+ *  Smart Mail Box
  *
  *  Author: Edgar Santana
+ *  Date: 2015-1-11
  */
 definition(
-    name: "Notify Me When Mail is Delivered",
+    name: "Smart Mail Box",
     namespace: "smartthings",
-    author: "SmartThings",
-    description: "Get a push message sent to your phone when your mail is delivered.",
+    author: "Edgar Santana",
+    description: "Get a push notification or text message when your mail arrives.",
     category: "Convenience",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/window_contact.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/window_contact@2x.png"
 )
 
 preferences {
-	section("When the door opens..."){
-		input "contact1", "capability.contactSensor", title: "Where?"
+	section("Choose one or more, when..."){
+		input "contact", "capability.contactSensor", title: "Contact Opens", required: false, multiple: true
+	}
+	section("Send this message (optional, sends standard status message if not specified)"){
+		input "messageText", "Your mail was delivered", title: "Mail Delivered?", required: false
+	}
+	section("Via a push notification and/or an SMS message"){
+		input "phone", "phone", title: "Phone Number (for SMS, optional)", required: false
+		input "pushAndPhone", "enum", title: "Both Push and SMS?", required: false, options: ["Yes","No"]
+	}
+	section("Minimum time between messages (optional, defaults to every message)") {
+		input "frequency", "decimal", title: "Minutes", required: false
 	}
 }
 
-def installed()
-{
-	subscribe(contact1, "contact.open", contactOpenHandler)
+def installed() {
+	log.debug "Installed with settings: ${settings}"
+	subscribeToEvents()
 }
 
-def updated()
-{
+def updated() {
+	log.debug "Updated with settings: ${settings}"
 	unsubscribe()
-	subscribe(contact1, "contact.open", contactOpenHandler)
+	subscribeToEvents()
 }
 
-def contactOpenHandler(evt) {
-	log.trace "$evt.value: $evt, $settings"
+def subscribeToEvents() {
+	subscribe(contact, "contact.open", eventHandler)
+	subscribe(contactClosed, "contact.closed", eventHandler)
+}
 
-	log.debug "$contact1 was delivered, sending push message to user"
-	sendPush("Your ${contact1.label ?: contact1.name} was delivered")
+def eventHandler(evt) {
+	if (frequency) {
+		def lastTime = state[evt.deviceId]
+		if (lastTime == null || now() - lastTime >= frequency * 60000) {
+			sendMessage(evt)
+		}
+	}
+	else {
+		sendMessage(evt)
+	}
+}
+
+private sendMessage(evt) {
+	def msg = messageText ?: defaultText(evt)
+	log.debug "$evt.name:$evt.value, pushAndPhone:$pushAndPhone, '$msg'"
+
+	if (!phone || pushAndPhone != "No") {
+		log.debug "sending push"
+		sendPush(msg)
+	}
+	if (phone) {
+		log.debug "sending SMS"
+		sendSms(phone, msg)
+	}
+	if (frequency) {
+		state[evt.deviceId] = now()
+	}
 }
