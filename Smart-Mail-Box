@@ -6,7 +6,7 @@
  */
 definition(
     name: "Smart Mail Box",
-    namespace: "smartthings",
+    namespace: "ersantana3",
     author: "Edgar Santana",
     description: "Get a push notification or text message when your mail arrives.",
     category: "Convenience",
