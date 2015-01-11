@@ -10,8 +10,8 @@ definition(
     author: "Edgar Santana",
     description: "Get a push notification or text message when your mail arrives.",
     category: "Convenience",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/window_contact.png",
-    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/window_contact@2x.png"
+    iconUrl: "http://www.iconpng.com/png/city/mail.png",
+    iconX2Url: "http://4.bp.blogspot.com/_bqCxQKDqifI/S9sp2PIWS4I/AAAAAAAADgE/mU7FFUtIm6k/s1600/mailbox.png"
 )
 
 preferences {
